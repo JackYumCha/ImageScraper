@@ -1,7 +1,12 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
+using System.IO;
+using OpenQA.Selenium;
 using Xunit;
 using OpenQA.Selenium.Chrome;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace ImageScraper
 {
@@ -19,34 +24,64 @@ namespace ImageScraper
 
                 chromeDriver.Navigate();
 
-                Debugger.Break();
+                Debugger.Break(); // you need to type "dog" in the search box
+
+                // make the page show as many dog images as it allows
 
                 var searchResultsDiv = chromeDriver.FindElementByCssSelector("div[data-async-rclass=\"search\"]");
 
-                Debugger.Break();
 
-                var images = searchResultsDiv.FindElements(OpenQA.Selenium.By.CssSelector("img"));
+                var images = searchResultsDiv.FindElements(By.CssSelector("img"));
 
-                System.Net.WebClient webClient = new System.Net.WebClient();
+                WebClient webClient = new WebClient();
 
                 int index = 0;
 
                 var baseDir = AppContext.BaseDirectory;
 
-                foreach(var image in images)
+                //var srcs = images
+                //    .Select(img => img.GetAttribute("src"))
+                //    .Where(src => src != null)
+                //    .ToList();
+
+                //Parallel.ForEach(srcs, new ParallelOptions()
+                //{
+                //    MaxDegreeOfParallelism = 10
+                //},
+                //(src) =>
+                //{
+                //    if (src.StartsWith(@"https://"))
+                //    {
+                //        while (File.Exists($@"{baseDir}\images\{index}.jpg"))
+                //        {
+                //            index += 1;
+                //        }
+                //        // this is link to image
+                //        webClient.DownloadFile(src, $@"{baseDir}\images\{index}.jpg");
+                //    }
+                //    else if (src.StartsWith(@"data:image/"))
+                //    {
+                //        // this is base 64 encoded image
+
+                //    }
+                //});
+
+                foreach (var image in images)
                 {
                     var src = image.GetAttribute("src");
-
+                    if (src == null)
+                        continue;
                     if (src.StartsWith(@"https://"))
                     {
-                        while (System.IO.File.Exists($@"{baseDir}\images\{index}.jpg"))
+                        while (File.Exists($@"{baseDir}\images\{index}.jpg"))
                         {
                             index += 1;
                         }
                         // this is link to image
                         webClient.DownloadFile(src, $@"{baseDir}\images\{index}.jpg");
                     }
-                    else if(src.StartsWith(@"data:image/")){
+                    else if (src.StartsWith(@"data:image/"))
+                    {
                         // this is base 64 encoded image
 
                     }
